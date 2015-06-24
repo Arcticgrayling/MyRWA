@@ -44,6 +44,16 @@ convert.time <- function(tbl.date, tbl.time){    #function to take date and time
 } # end convert time function
 
 
+StationNameChange <- function(st.name,df.stnames){  
+  for (reportRow in 1:nrow(df.stnames)){
+    if (df.stnames[reportRow,1] == st.name) {
+      return( df.stnames[reportRow,2])
+    }
+  }
+  stop(paste("missing", st.name))  ## if no match found stops the program
+}
+
+
 
 ExtractOneFile <- function (origFile,numRowSkip) { #paramaters: file to process and number of rows at top to skip
   origData <- read.table (file = origFile, header = FALSE, sep = ",", skip=numRowSkip, na.strings = c(""))
@@ -69,7 +79,7 @@ ExtractOneFile <- function (origFile,numRowSkip) { #paramaters: file to process 
       surveyDate <- reportDates[[surveyDateI]] #get date from list above, based on column
       
       #checkStationName(origStationName,origFile)  # check station name
-      #stationName <- toString(StationNameChange(origStationName,df.LocationNameChange))  # change station name
+      stationName <- toString(StationNameChange(origStationName,df.LocationNameChange))  # change station name
       
      
       #Combine Date and Time into one value
@@ -81,7 +91,7 @@ ExtractOneFile <- function (origFile,numRowSkip) { #paramaters: file to process 
       #write to vector
       
       
-      l <- c(origStationName,  surveyDate,  surveyTimeStamp, surveyTemp, surveyOxy )
+      l <- c(stationName,  surveyDate,  surveyTimeStamp, surveyTemp, surveyOxy )
       print(l)
       #write to data frame
       if (exists("results.frame") ) {
@@ -107,7 +117,7 @@ resultsLoc <- paste(wd,"Results/", sep = "")
 
 ##Establish list of station/Location names and replacements so they can changed, from file
 LocationNameChange.File <- paste(dataLoc,"LocationChangeData.csv", sep = "")  
-#df.LocationNameChange <- read.table (file = LocationNameChange.File, header = FALSE, sep = ",", skip=1, na.strings = c(""))
+df.LocationNameChange <- read.table (file = LocationNameChange.File, header = FALSE, sep = ",", skip=1, na.strings = c(""))
 
 ## Establish list of Table names and relevant table info from file 
 Table.NameInfo.File <- paste(dataLoc,"TableInfo.csv", sep ="") 
@@ -129,6 +139,7 @@ print(df.save)
 df.save[is.na(df.save)] <- ""
 print(df.save)
 
+setwd(resultsLoc)
 write.table(df.save, file = "RESULTS.csv",                # write the results out to a csv file
             append = FALSE, quote = TRUE, sep = ",", 
             eol = "\n", na = "", dec = ".", row.names = FALSE, col.names = TRUE, 
