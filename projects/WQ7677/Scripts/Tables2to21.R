@@ -1,9 +1,9 @@
 ## Mystic River Watershed Association
-##  WQ7677  - Mystic River Water Quality Data Report 1977
-## Project to convert data from to a usable format
+##  WQ7677  - Mystic River Water Quality Data Report 1977 conversion
+## Project to convert data from Report to a usable format
 ##  Peter Olsen June, 2015
 ## This script transposes the remaining tables into a usable format
-## and save to the results file that was created in "FirstScriptFirstFile.R". This Script must be run first
+## and save to the results file that was created in "FirstScriptFirstFile.R". FristScriptFirstFile.R must be run first
 
 require(stringr)
 require(lubridate)
@@ -19,7 +19,7 @@ findLine <- function (f.stationName, f.date, f.data ) {
   for (row in 1:nrow(RESULTS)){
     
     
-    print(paste("date:",f.date,"row",row,"RESULTS[row,1]",RESULTS[row,2]))
+    #print(paste("date:",f.date,"row",row,"RESULTS[row,1]",RESULTS[row,2]))
     if ((toString(f.stationName) == toString(RESULTS[row,1]))   
         && 
           ((toString(f.date)) == toString(RESULTS[row,2]))) {
@@ -48,10 +48,25 @@ StationNameChange <- function(st.name,df.stnames){
   stop(paste("missing", st.name))  ## if no match found stops the program
 }
 
+########
+changeZero <- function(table.number, t.date){  # from another project, some code won't be used
+  if (! (table.number == 29)) {
+    return(toString(df.Table[table.number,5]))  # this line should be only one used for this project
+  } else {  #hanlde two dates and values for silver
+    if (t.date == "5/13/1980") {
+      return(toString(df.Table[table.number,6]))
+    } else if (t.date == "10/28/1980"){
+      return(toString(df.Table[table.number,7]))  
+    }
+  }
+} # end of function changeZero()
+
+
+
 #########Fuction to Extact data from one file from a Table
 ProcessOneFile <- function (origFile,numRowSkip) {
-  origData <- read.table (file = origFile, header = FALSE, sep = ",", skip=numRowSkip, na.strings = c(""))
-  
+  origData <- read.csv (file = origFile, header = FALSE, sep = ",", skip=numRowSkip, na.strings = c(""), stringsAsFactors = FALSE)
+  print(origData)
   results.col <- as.integer(1)  # establish a varaible to keep track of columns in results frame 
   
   v1 <- vector(mode="character") # establish a vector to write data to and to add line to the results table
@@ -72,7 +87,7 @@ ProcessOneFile <- function (origFile,numRowSkip) {
       stationName <- toString(StationNameChange(OrigStationName, df.LocationNameChange))  #change location/station names
       surveyDate <- reportDates[[surveyDateI]] #get date from list above, based on column
       
-      if (surveyData == 0){
+      if ((surveyData == 0) || (surveyData == "0.00")){
         surveyData <- changeZero(t.num, surveyDate)
       }
       print(paste("info so far: station:", stationName, "Date:",surveyDate,"Data:",surveyData))
@@ -123,33 +138,35 @@ df.Table <- read.table (file = Table.NameInfo.File, header = FALSE, sep = ",", s
 
 ## Set Location of RESULTS TABLE for writting to
 Table.results <- paste(resultsLoc,"RESULTS.csv", sep ="")
-df.results  <-  read.table (file = Table.results, header = TRUE, sep = ",", skip=0, na.strings = c(""))
+df.results  <-  read.table (file = Table.results, header = TRUE, sep = ",",  na.strings = c(""))
 RESULTS <- df.results
 
 setwd(wd)
 
-t.num <- 2
-
-p.file <- paste(dataLoc,"Table",t.num,".csv", sep ="")
-
-l <- ProcessOneFile(p.file,3)
-
-print(l)
-
-#SET Label - handle incomplete data in table
-if (is.na(df.Table[t.num,5])){
-  print(paste(df.Table[t.num,5], df.Table[t.num,2]))
-  label <- df.Table[t.num,2]  #lable of sample type eg. total Coliform etc.
-} else{
-  label <- df.Table[t.num,5]
+for (t.num in 2:21){
+  #t.num <- 2
+  print(paste("PROCESSING TABLE: ", t.num))
+  p.file <- paste(dataLoc,"Table",t.num,".csv", sep ="")
+  
+  l <- ProcessOneFile(p.file,4)
+  
+  print(l)
+  
+  #SET Label - handle incomplete data in table
+  if (is.na(df.Table[t.num,4])){
+    print(paste(df.Table[t.num,4], df.Table[t.num,2]))
+    label <- df.Table[t.num,2]  #lable of sample type eg. total Coliform etc.
+  } else{
+    label <- df.Table[t.num,4]
+  }
+  
+  
+  
+  results.col <- t.num + 4  # establish column the results vector will go, using table numbers to increment
+  RESULTS[,results.col] <- c(l)
+  #colnames(df.save) <- c("OrigStationName","LocationID","SurveyDate","Datetime","TEMP_WATER","DO", )
+  names(RESULTS)[t.num+4] <- toString(label)
 }
-
-
-
-results.col <- t.num + 4  # establish column results will go, using table numbers to increment
-RESULTS[,results.col] <- c(l)
-#colnames(df.save) <- c("OrigStationName","LocationID","SurveyDate","Datetime","TEMP_WATER","DO", )
-names(RESULTS)[t.num+4] <- toString(label)
 
 
 write.table(RESULTS, file = "WQ7981FullReportReshaped.csv",                
