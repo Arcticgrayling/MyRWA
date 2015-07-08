@@ -168,8 +168,8 @@ for (t.num in 2:21){
   names(RESULTS)[t.num+4] <- toString(label)
 }
 
-
-write.table(RESULTS, file = "WQ7981FullReportReshaped.csv",                
+setwd(resultsLoc)
+write.table(RESULTS, file = "WQ7677FullReportReshaped.csv",                
             append = FALSE, quote = TRUE, sep = ",", 
             eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE, 
             qmethod = c("escape", "double"), fileEncoding = "")
