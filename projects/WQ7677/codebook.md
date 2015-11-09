@@ -7,12 +7,12 @@
 ####Stations: 17-22 in report, converted to currently used location names by MyRWA
    indicated in LocationChangeData.csv
    Report Station	New Station name	notes
-	17				ABR049	
-	18				ABR028	
-	19				ABR006	
-	20				HOB002			*map and location description don't match exactly
-	21				SWBB	
-	22				HAB002	
+	17				ABR049	  
+	18				ABR028	  
+	19				ABR006    	
+	20				HOB002			*map and location description don't match exactly 
+	21				SWBB	  
+	22				HAB002	  
    
 ####timestamp  - from date and time, year was assumed based on days not being on a weekend
   time is the first data point, a 3-4 digit number, in the first table
