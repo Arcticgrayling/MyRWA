@@ -117,7 +117,8 @@ resultsLoc <- paste(wd,"Results/", sep = "")
 
 ##Establish list of station/Location names and replacements so they can changed, from file
 LocationNameChange.File <- paste(dataLoc,"LocationChangeData.csv", sep = "")  
-df.LocationNameChange <- read.table (file = LocationNameChange.File, header = FALSE, sep = ",", skip=1, na.strings = c(""))
+df.LocationNameChange <- read.csv (file = LocationNameChange.File)
+#na.strings = c("")
 
 ## Establish list of Table names and relevant table info from file 
 Table.NameInfo.File <- paste(dataLoc,"TableInfo.csv", sep ="") 

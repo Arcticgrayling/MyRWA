@@ -24,11 +24,11 @@ findLine <- function (f.stationName, f.date, f.data ) {
         && 
           ((toString(f.date)) == toString(RESULTS[row,2]))) {
       
-        print("BINGO!!!!!")
+     
       #print(paste("t2 station",df.t2[row,2],toString(df.t2[row,3])))
-      print(paste("New table - date: ",toString(mdy(f.date)),"Station Name:",f.stationName,"data:",f.data,"row:",row))
+      #print(paste("New table - date: ",toString(mdy(f.date)),"Station Name:",f.stationName,"data:",f.data,"row:",row))
       #df.t2[row,8] <- toString(f.data)
-      print(paste("match found for row:",row))
+      #print(paste("match found for row:",row))
       #stop()
       return(row)
     } 
@@ -38,10 +38,10 @@ findLine <- function (f.stationName, f.date, f.data ) {
 
 #######
 StationNameChange <- function(st.name,df.stnames){  
-  print(paste("report name",st.name))
+  #print(paste("report name",st.name))
   for (reportRow in 1:nrow(df.stnames)){
     if (df.stnames[reportRow,1] == st.name) {
-      print(paste("return name",df.stnames[reportRow,2]))
+      #print(paste("return name",df.stnames[reportRow,2]))
       return( df.stnames[reportRow,2])
     }
   }
@@ -49,16 +49,16 @@ StationNameChange <- function(st.name,df.stnames){
 }
 
 ########
-changeZero <- function(table.number, t.date){  # from another project, some code won't be used
-  if (! (table.number == 29)) {
+changeZero <- function(table.number, t.date){  # 
+  #if (! (table.number == 29)) {
     return(toString(df.Table[table.number,5]))  # this line should be only one used for this project
-  } else {  #hanlde two dates and values for silver
-    if (t.date == "5/13/1980") {
-      return(toString(df.Table[table.number,6]))
-    } else if (t.date == "10/28/1980"){
-      return(toString(df.Table[table.number,7]))  
-    }
-  }
+  #} else {  #hanlde two dates and values for silver- WQ7981 project
+  #  if (t.date == "5/13/1980") {
+  #    return(toString(df.Table[table.number,6]))
+  #  } else if (t.date == "10/28/1980"){
+  #    return(toString(df.Table[table.number,7]))  
+  #  }
+  #}
 } # end of function changeZero()
 
 
@@ -66,7 +66,7 @@ changeZero <- function(table.number, t.date){  # from another project, some code
 #########Fuction to Extact data from one file from a Table
 ProcessOneFile <- function (origFile,numRowSkip) {
   origData <- read.csv (file = origFile, header = FALSE, sep = ",", skip=numRowSkip, na.strings = c(""), stringsAsFactors = FALSE)
-  print(origData)
+  #print(origData)
   results.col <- as.integer(1)  # establish a varaible to keep track of columns in results frame 
   
   v1 <- vector(mode="character") # establish a vector to write data to and to add line to the results table
@@ -82,34 +82,40 @@ ProcessOneFile <- function (origFile,numRowSkip) {
         next   #skip lines with NA values
       }
      
-      print(paste("row",table.row,"col",table.col,"date position",surveyDateI,"data",surveyData))
+      #print(paste("row",table.row,"col",table.col,"date position",surveyDateI,"data",surveyData))
       #process data
       stationName <- toString(StationNameChange(OrigStationName, df.LocationNameChange))  #change location/station names
       surveyDate <- reportDates[[surveyDateI]] #get date from list above, based on column
       
-      if ((surveyData == 0) || (surveyData == "0.00")){
-        surveyData <- changeZero(t.num, surveyDate)
+      if ((surveyData == 0) || (surveyData == "0.00")  ){
+        
+         if (t.num == 3) {
+                 surveyData <- 0;
+         }  else { 
+                 print(t.num);
+                surveyData <- changeZero(t.num, surveyDate);
+                }
       }
-      print(paste("info so far: station:", stationName, "Date:",surveyDate,"Data:",surveyData))
+     # print(paste("info so far: station:", stationName, "Date:",surveyDate,"Data:",surveyData))
       #write data to a vector to be added to Results file
       
       line.num <- findLine(stationName, surveyDate, surveyData)
-      print(paste("line.num",line.num))
+      #print(paste("line.num",line.num))
       v1[line.num] <- surveyData  #add data to vector - to be added to table below
            
     }    #end for col
   } # end for row 
-  print("end of loops")
-  print(paste("v1 is:",v1))
+  #print("end of loops")
+  #print(paste("v1 is:",v1))
   
   
   if (length(v1) == nrow(RESULTS)){
-    print(v1)
+   # print(v1)
     return(v1)
   } else{
-    print(paste("v1",v1, "start:", length(v1),"end:",nrow(RESULTS)))
+    #print(paste("v1",v1, "start:", length(v1),"end:",nrow(RESULTS)))
     stop ("vector not long enough")
-    print(paste("start:", length(v1),"end:",nrow(RESULTS)))
+    #print(paste("start:", length(v1),"end:",nrow(RESULTS)))
     for (x in (length(v1)+1):nrow(RESULTS)){
     
       v1[x] <- ""
@@ -129,8 +135,8 @@ resultsLoc <- paste(wd,"Results/", sep = "")
 
 ##Establish list of station/Location names and replacements so they can changed, from file
 LocationNameChange.File <- paste(dataLoc,"LocationChangeData.csv", sep = "")  
-df.LocationNameChange <- read.table (file = LocationNameChange.File, header = FALSE, sep = ",", skip=1, na.strings = c(""))
-print(df.LocationNameChange)
+df.LocationNameChange <- read.csv (file = LocationNameChange.File)
+#print(df.LocationNameChange)
 
 ## Establish list of Table names and relevant table info from file 
 Table.NameInfo.File <- paste(dataLoc,"TableInfo.csv", sep ="") 
@@ -145,16 +151,16 @@ setwd(wd)
 
 for (t.num in 2:21){
   #t.num <- 2
-  print(paste("PROCESSING TABLE: ", t.num))
+ # print(paste("PROCESSING TABLE: ", t.num))
   p.file <- paste(dataLoc,"Table",t.num,".csv", sep ="")
   
   l <- ProcessOneFile(p.file,4)
   
-  print(l)
+ # print(l)
   
   #SET Label - handle incomplete data in table
   if (is.na(df.Table[t.num,4])){
-    print(paste(df.Table[t.num,4], df.Table[t.num,2]))
+    #print(paste(df.Table[t.num,4], df.Table[t.num,2]))
     label <- df.Table[t.num,2]  #lable of sample type eg. total Coliform etc.
   } else{
     label <- df.Table[t.num,4]
