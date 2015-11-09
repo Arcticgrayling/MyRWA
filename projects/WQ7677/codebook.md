@@ -6,8 +6,8 @@
 
 ####Stations: 17-22 in report, converted to currently used location names by MyRWA
    indicated in LocationChangeData.csv
-   Report Station	New Station name	notes
-	17				ABR049  
+   Report Station	New Station name	notes  
+    17				ABR049  
 	18				ABR028	  
 	19				ABR006    	
 	20				HOB002			*map and location description don't match exactly   
