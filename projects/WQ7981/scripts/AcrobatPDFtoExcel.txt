@@ -1,0 +1,66 @@
+Converting files from pdf to excel .xlsx format using Adobe Acrobat 11 on a MAC
+
+
+1. How to convert a single PDF file to Excel:
+
+Open a file in Acrobat XI.
+Choose Tools > Content Editing > Export File to Microsoft Excel Workbook.
+Name the Excel file and save it in a desired location.
+
+
+2. How to Convert more than one PDF file to Excel format - create an Action Wizard (script)  
+(note: I did not find this intuitive or easy. It may take a few tries.  Be patient)
+
+  The Action Wizard is a GUI based script generator.
+
+2.1 Open a pdf file
+On top right select tools
+select Action Wizard - create a new action
+
+2.2 On right under Files to be processed
+  under Currently open file as default
+  select the folder icon instead
+  and in window that pops up select the directory with all the pdfs in it
+
+2.3 On the left under Choose Tools to add
+  Open Recognize Text
+  and select Recognize Text using OCR
+  use the add icon in the middle to move this over to Action Steps
+
+2.4 under Choose tools to add:
+Open Save and Export
+Click on Save
+Click on the add icon in middle to move this over to Action Steps
+       Open Save
+       Select save to open Folder
+        and choose folder to save the converted files too.  You can create a new folder here if you need to .
+
+2.5 Under Save to Local Folder
+  Select Specify Settings
+  under Output Format
+  select Export Files to Alternate Format
+  At Export to: Select Excel Workbook
+  and then O.K.
+
+  You are done creating script
+
+2.6 At bottom select Save and give the script a name
+
+2.7 Run Script
+  Now while viewing the file you will see Under Action Wizard on the right
+  your script name will appear under Actions
+  Select your Script(Action)
+  make sure the files you want to convert are selected
+  Click Start
+
+
+If it is not working the way you want or you want to make changes go to Action Wizard > Manage Actions and you can edit the script there.
+
+I exported the script I used to this file:
+ConvertPDFtoExcel.sequ
+
+You can try importing this script and editing it for your needs.
+       
+
+reference:
+http://www.adobe.com/products/acrobat/pdf-to-excel-xlsx-converter.html
