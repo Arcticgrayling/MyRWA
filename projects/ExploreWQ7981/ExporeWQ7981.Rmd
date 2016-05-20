@@ -1,0 +1,173 @@
+---
+title: "Exploring MyRWA historical data"
+author: "Peter Olsen"
+date: "November 24, 2015, last edited: 5/19/2016"
+output: html_document
+---
+#Synopsis:
+This is an attempt to explore a part of the Mystic River Watershed Association (MyRWA: myrwa.org) database.  I am particularly interested in looking at the historical data gleaned from https://github.com/Arcticgrayling/MyRWA/tree/master/projects/WQ7981 and entered into the data base.
+I want to see how this data compares to current data from the sites sampled in this report.  I am using techinques learned from Roger Peng and his Exploratory Data Analysis with R class and book: 
+https://www.coursera.org/learn/exploratory-data-analysis and https://leanpub.com/exdata
+
+#Cleaning the Data
+I was give an Excel(.xlsx) file from Andy Hycerna at Myrwa which includes the sites in question from the MyRWA database.  It is large and the R xlsx reader had trouble handling it.  I used Excel to convert the data to .csv format, being careful to change the date format in Excel to give the complete data and time for each site, which loads easily into R.
+```{r}
+rm(list=ls())   # Clean: remove all variables in Enviornment
+library(ggplot2)
+#library(plyr)
+library(dplyr)
+library(lubridate)
+
+
+wd <- "~/Documents/MyRWA/projects/ExploreWQ7981/"
+#scriptsLoc <- paste(wd,"scripts/analyze/", sep = "")
+dataLoc <- paste(wd,"data/", sep = "")
+#resultsLoc <- paste(wd,"results/", sep = "")
+setwd(wd)
+
+site.data <- paste(dataLoc,"siteData.csv", sep = "")  
+
+dataRaw <- read.csv(site.data)
+
+#list of database names of locations sampled in report
+reportLocations <- c("AJ01","ABRN01","ABR070","HAB001","ABR049",
+                     "ABR036","ABR028","ABR017","ABR006","ABR001",
+                     "UPL001","MYR071","MIB001","MWRA070","MWRA172",
+                     "MWRA061","MYR39","MAR036","MWRA059","HAB0015",
+                     "HAB002","SWBB","HOB103","SHBTRIB","CUBLEX","HBT01",
+                     "HBT02","HBT03","HBT05","HBT06","HBT07","HBT08")
+
+#Show characteristics of the data set:
+
+dim(dataRaw)
+str(dataRaw)
+head(dataRaw)
+tail(dataRaw)
+```
+We can see the data set is fairly large.
+
+Lets narrow the data down to sites that were in the report and the columns that we are interested in.
+
+```{r}
+## get just location from report
+
+d <- filter(dataRaw, dataRaw$LocationID %in% reportLocations)
+#d <- subset(d, d$LocationID %in% reportLocations)
+# get just useful columns
+d <- select(d, one_of("CharacteristicID","ResultValue","Units","LocationID","Datetime"))
+d <- filter(d,!is.na(ResultValue))
+dim(d)
+head(d)
+str(d)
+
+#refactor: (from hadley,http://grokbase.com/t/r/r-help/0765n5rmsf/r-refactor-all-factors-in-a-data-frame)
+cat <- sapply(d, is.factor)
+d[cat] <- lapply(d[cat], factor)       
+
+## see where there are enough values to explore further
+table(d$LocationID, d$CharacteristicID)
+
+```
+From the table we can see which sites have a large number of values for certain Characteristics.
+
+FCOLI is of interest and site WMRA070 has a fairly large number of values.  
+
+```{r}
+
+## subset for site and FCOLI results
+dFcoli <- filter(d, d$CharacteristicID == "FCOLI" & d$LocationID == "MWRA070")
+
+## add a year column to look at data by year
+
+
+dFcoli <- 
+      mutate(dFcoli,
+             year =  year(strptime(dFcoli$Datetime, "%m/%d/%Y %H:%M"))
+        )
+#dFcoli$year <- factor(dFcoli$year)
+```
+What does our data spread look like?
+```{r}
+
+summary(dFcoli$ResultValue)
+
+```
+
+Lets see what FCOLI at site WMRA070 looks like over time on a time series plot.  
+
+```{r}
+dplot <- dFcoli %>% group_by(year) %>% summarise(avg=mean(ResultValue))
+
+g <- ggplot(dplot, aes(year, avg))
+g + geom_point() + geom_smooth(method= "lm")
+
+
+```
+
+Alternate plot with log transform on the yearly avg
+```{r}
+dFcoli["ResultValue"] <- log(dFcoli["ResultValue"])
+dplot <- dFcoli %>% group_by(year) %>% summarise(avg=mean(ResultValue))
+g <- ggplot(dplot, aes(year, avg))
+g + geom_point() + geom_smooth(method = "lm")
+
+```
+  
+With these graphs we can see an indication that Fcoli is going down over time at this site.  The log transform did not appear to help us any.
+
+Lets taek a step back and look at Fcoli for all the sites in the report, not just site WMRA070
+
+```{r}
+reportSitesFcoli <- dplyr::filter(d, d$CharacteristicID == "FCOLI" & d$LocationID %in% reportLocations)
+
+## add a year column to look at data by year
+
+reportSitesFcoli <- 
+      mutate(reportSitesFcoli,
+             year =  year(strptime(reportSitesFcoli$Datetime, "%m/%d/%Y %H:%M"))
+        )
+#reportSitesFcoli <- dplyr::filter(!is.na(reportSitesFcoli))
+
+summary(reportSitesFcoli$ResultValue)
+
+allsites <- reportSitesFcoli %>% group_by(year) %>% summarise(avg=mean(ResultValue))
+
+
+```
+The time series plot of Fcoli in all sites in the report looks like this:
+
+```{r}
+##plot with linear model line to see direction of results over time
+allg <- ggplot(allsites, aes(year, avg))
+allg + geom_point() + geom_smooth(method = "lm")
+
+```
+
+Lets take another step back and look at Fcoli for all sites in this data.
+
+```{r}
+## subset for site and FCOLI results
+allFcoli <- filter(dataRaw, dataRaw$CharacteristicID == "FCOLI")
+
+## add a year column to look at data by year
+
+allFcoli <- 
+      mutate(allFcoli,
+             year =  year(strptime(allFcoli$Datetime, "%m/%d/%Y %H:%M"))
+        )
+
+summary(allFcoli$ResultValue)
+
+alldata <- allFcoli %>% group_by(year) %>% summarise(avg=mean(ResultValue))
+
+
+##plot with linear model line to see direction of results over time
+allg <- ggplot(alldata, aes(year, avg))
+allg + geom_point() + geom_smooth(method = "lm")
+```
+
+All plots show a downward slowing line with the linear model.  This would indicate a decrease in the amount of Fcoli in the river system over time.
+The last plot is not as clear as to the slope of the line and more investigation into what what was happening at some of the sites included in the data may be needed.
+
+```{r}
+
